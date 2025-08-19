@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class QuoteItem extends Model
+{
+    protected $table = 'budget_quote_items';
+    protected $fillable = [
+        'quote_id','sku','name','description','quantity','unit',
+        'unit_price_cents','discount_cents','tax_cents','line_total_cents'
+    ];
+
+    public function quote(): BelongsTo { return $this->belongsTo(Quote::class, 'quote_id'); }
+}
