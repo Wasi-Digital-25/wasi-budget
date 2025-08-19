@@ -59,3 +59,18 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+# Wasi Budget
+
+Aplicación Laravel para gestión de presupuestos (multiempresa/multiusuario).
+
+## Desarrollo local
+```bash
+cp .env.example .env   # Configura variables DB_*
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve --host=127.0.0.1 --port=8000
+
