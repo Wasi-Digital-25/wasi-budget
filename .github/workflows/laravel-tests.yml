@@ -1,0 +1,70 @@
+name: Laravel Tests
+
+on:
+  push:
+    branches: [ dev, main ]
+  pull_request:
+    branches: [ dev, main ]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Obtener el código
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) Configurar PHP
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, dom, fileinfo, pdo_mysql, pdo_sqlite, sqlite3
+          coverage: none
+
+      # 3) Preparar .env y carpetas necesarias
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          mkdir -p bootstrap/cache
+
+      # 4) Dependencias de Composer
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      # 5) Generar APP_KEY
+      - name: App key
+        run: php artisan key:generate
+
+      # 6) Configurar Node y construir assets (Vite)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      # 7) Migraciones con SQLite en memoria
+      - name: Run migrations (sqlite in-memory)
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+        run: php artisan migrate --no-interaction
+
+      # 8) Ejecutar tests
+      - name: Run tests
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+        run: php artisan test
