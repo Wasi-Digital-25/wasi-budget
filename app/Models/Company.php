@@ -11,4 +11,6 @@ class Company extends Model
 
     public function users(): HasMany { return $this->hasMany(User::class); }
     public function quotes(): HasMany { return $this->hasMany(Quote::class); }
+    public function clients(): HasMany { return $this->hasMany(Client::class); }
 }
+
