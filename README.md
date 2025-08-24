@@ -73,4 +73,7 @@ composer install
 php artisan key:generate
 php artisan migrate --seed
 php artisan serve --host=127.0.0.1 --port=8000
+```
 
+## Generación de PDF
+Esta aplicación genera PDFs de cotizaciones usando DomPDF. Instala la dependencia `barryvdh/laravel-dompdf` y asegúrate de configurar el logo de la empresa si está disponible.

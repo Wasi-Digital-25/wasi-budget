@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\Quote;
 use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Requests\UpdateQuoteRequest;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QuoteSentMail;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class QuoteController extends Controller
 {
@@ -34,7 +36,29 @@ class QuoteController extends Controller
         $data = $request->validated();
         $data['company_id'] = $request->user()->company_id;
         $data['user_id'] = $request->user()->id;
+
+        $client = Client::findOrFail($data['client_id']);
+        $data['client_name'] = $client->name;
+        $data['client_email'] = $client->email;
+        $data['client_phone'] = $client->phone;
+        $data['valid_until'] = $data['expires_at'];
+        $items = $data['items'];
+        unset($data['expires_at'], $data['items']);
+
         $quote = Quote::create($data);
+
+        foreach ($items as $item) {
+            $lineTotal = $item['qty'] * $item['unit_price_cents'] - ($item['discount_cents'] ?? 0);
+            $quote->items()->create([
+                'description' => $item['description'],
+                'quantity' => $item['qty'],
+                'unit_price_cents' => $item['unit_price_cents'],
+                'discount_cents' => $item['discount_cents'] ?? 0,
+                'line_total_cents' => $lineTotal,
+            ]);
+        }
+
+        $quote->save();
 
         return redirect()->route('quotes.show', $quote);
     }
@@ -54,7 +78,26 @@ class QuoteController extends Controller
     public function update(UpdateQuoteRequest $request, Quote $quote): RedirectResponse
     {
         $this->authorize('update', $quote);
-        $quote->update($request->validated());
+        $data = $request->validated();
+        $data['valid_until'] = $data['expires_at'];
+        $items = $data['items'];
+        unset($data['expires_at'], $data['items']);
+
+        $quote->update($data);
+
+        $quote->items()->delete();
+        foreach ($items as $item) {
+            $lineTotal = $item['qty'] * $item['unit_price_cents'] - ($item['discount_cents'] ?? 0);
+            $quote->items()->create([
+                'description' => $item['description'],
+                'quantity' => $item['qty'],
+                'unit_price_cents' => $item['unit_price_cents'],
+                'discount_cents' => $item['discount_cents'] ?? 0,
+                'line_total_cents' => $lineTotal,
+            ]);
+        }
+        $quote->save();
+
         return redirect()->route('quotes.show', $quote);
     }
 
@@ -95,7 +138,7 @@ class QuoteController extends Controller
     public function pdf(Quote $quote)
     {
         $this->authorize('view', $quote);
-        // placeholder response
-        return response('PDF not implemented');
+        $pdf = Pdf::loadView('quotes.pdf', ['quote' => $quote]);
+        return $pdf->download('quote-' . $quote->number . '.pdf');
     }
 }
