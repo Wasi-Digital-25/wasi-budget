@@ -15,46 +15,44 @@ class DemoSeeder extends Seeder
 {
     public function run(): void
     {
-        $company = Company::firstOrCreate(
-            ['slug' => 'wasi-digital'],
-            ['name' => 'Wasi Digital', 'plan' => 'starter', 'currency' => 'PEN']
-        );
-
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@wasi.test'],
-            [
-                'name' => 'Admin Wasi',
-                'password' => Hash::make('password'),
-                'company_id' => $company->id,
-                'role' => 'admin',
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-            ]
-        );
-
-        User::factory()->count(2)->create([
-            'company_id' => $company->id,
-            'role' => 'staff',
+        $company = Company::factory()->create([
+            'name' => 'Wasi Digital',
+            'slug' => 'wasi-digital',
+            'plan' => 'starter',
+            'currency' => 'PEN',
         ]);
 
-        $clients = Client::factory()->count(10)->create([
+        $admin = User::factory()->create([
+            'email' => 'admin@wasi.test',
+            'name' => 'Admin Wasi',
+            'password' => Hash::make('password'),
             'company_id' => $company->id,
-            'created_by' => $admin->id,
+            'role' => 'admin',
+            'email_verified_at' => now(),
+            'remember_token' => Str::random(10),
         ]);
 
-        Quote::factory()->count(20)->create([
-            'company_id' => $company->id,
-            'user_id' => $admin->id,
-        ])->each(function (Quote $quote) use ($clients) {
-            $client = $clients->random();
-            $quote->client_id = $client->id;
-            $quote->client_name = $client->name;
-            $quote->client_email = $client->email;
-            $quote->client_phone = $client->phone;
-            $quote->save();
+        User::factory()->count(2)->for($company)->state(['role' => 'staff'])->create();
 
-            QuoteItem::factory()->count(rand(2,5))->create(['quote_id' => $quote->id]);
-            $quote->save();
-        });
+        $clients = Client::factory()->count(10)
+            ->for($company)
+            ->for($admin, 'creator')
+            ->create();
+
+        Quote::factory()->count(20)
+            ->for($company)
+            ->for($admin)
+            ->create()
+            ->each(function (Quote $quote) use ($clients) {
+                $client = $clients->random();
+                $quote->client()->associate($client);
+                $quote->client_name = $client->name;
+                $quote->client_email = $client->email;
+                $quote->client_phone = $client->phone;
+                $quote->save();
+
+                QuoteItem::factory()->count(rand(1,4))->for($quote)->create();
+                $quote->save();
+            });
     }
 }

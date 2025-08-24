@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quote extends Model
 {
+    use HasFactory;
+
     protected $table = 'budget_quotes';
     protected $fillable = [
         'company_id','user_id','client_id','number','client_name','client_email','client_phone','currency',
