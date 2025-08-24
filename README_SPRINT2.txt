@@ -1,0 +1,1 @@
+Este es un archivo de muestra. En tu entorno real, sprint2_src.zip contendrá los cambios del Sprint 2.
