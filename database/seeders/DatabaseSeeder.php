@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         // Seeder de Admin
         $this->call([
             AdminUserSeeder::class,
+            DemoSeeder::class,
         ]);
 
         // Usuario demo idempotente (no choca con tests)

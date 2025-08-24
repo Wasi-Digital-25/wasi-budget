@@ -26,6 +26,7 @@ return new class extends Migration {
             $table->dateTime('valid_until')->nullable();
             $table->string('public_hash')->nullable()->unique(); // para enlace público
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['company_id','status']);
         });
