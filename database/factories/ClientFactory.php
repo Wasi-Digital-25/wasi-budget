@@ -17,6 +17,7 @@ class ClientFactory extends Factory
     public function definition(): array
     {
         return [
+            // Si la factory recibe company_id lo reutiliza; si no, crea una.
             'company_id' => Company::factory(),
             'name' => $this->faker->name(),
             'email' => $this->faker->safeEmail(),
@@ -24,6 +25,8 @@ class ClientFactory extends Factory
             'tax_id' => $this->faker->unique()->numerify('###########'),
             'address' => $this->faker->address(),
             'notes' => $this->faker->sentence(),
+
+            // El usuario creador pertenecerá a la misma company (o una nueva si no se pasó).
             'created_by' => User::factory()->state(fn (array $attributes) => [
                 'company_id' => $attributes['company_id'] ?? Company::factory(),
             ]),
