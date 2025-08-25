@@ -19,14 +19,27 @@ class QuoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => Company::factory(),
-            'user_id' => User::factory()->state(fn (array $attributes) => [
-                'company_id' => $attributes['company_id'],
-            ]),
-            'client_id' => Client::factory()->state(fn (array $attributes) => [
-                'company_id' => $attributes['company_id'],
-                'created_by' => $attributes['user_id'],
-            ]),
+            // Si vienen en $attributes se usan; si no, se crean con factories.
+            'company_id' => fn (array $attributes) => $attributes['company_id'] ?? Company::factory(),
+
+            'user_id' => function (array $attributes) {
+                return $attributes['user_id']
+                    ?? User::factory()->state(fn (array $userAttrs) => [
+                        'company_id' => $attributes['company_id'] ?? Company::factory(),
+                    ]);
+            },
+
+            'client_id' => function (array $attributes) {
+                return $attributes['client_id']
+                    ?? Client::factory()->state(fn (array $clientAttrs) => [
+                        'company_id' => $attributes['company_id'] ?? Company::factory(),
+                        'created_by' => $attributes['user_id']
+                            ?? User::factory()->state(fn (array $userAttrs) => [
+                                'company_id' => $attributes['company_id'] ?? Company::factory(),
+                            ]),
+                    ]);
+            },
+
             'number' => 'Q-' . $this->faker->unique()->numerify('000000'),
             'client_name' => $this->faker->name(),
             'client_email' => $this->faker->safeEmail(),
@@ -46,3 +59,4 @@ class QuoteFactory extends Factory
         });
     }
 }
+

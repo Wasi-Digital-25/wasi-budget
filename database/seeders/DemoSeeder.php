@@ -42,6 +42,7 @@ class DemoSeeder extends Seeder
         Quote::factory()->count(20)
             ->for($company)
             ->for($admin)
+            ->state(['client_id' => null]) // 👈 mantener esto
             ->create()
             ->each(function (Quote $quote) use ($clients) {
                 $client = $clients->random();
@@ -51,7 +52,7 @@ class DemoSeeder extends Seeder
                 $quote->client_phone = $client->phone;
                 $quote->save();
 
-                QuoteItem::factory()->count(rand(1,4))->for($quote)->create();
+                QuoteItem::factory()->count(rand(1, 4))->for($quote)->create();
                 $quote->save();
             });
     }
