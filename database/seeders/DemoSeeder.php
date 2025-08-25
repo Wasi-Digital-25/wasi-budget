@@ -15,21 +15,24 @@ class DemoSeeder extends Seeder
 {
     public function run(): void
     {
+        // 🔧 Limpia el historial de unique() antes de generar datos
+        fake()->unique(true);
+
         $company = Company::factory()->create([
             'name' => 'Wasi Digital',
-            'slug' => 'wasi-digital',
-            'plan' => 'starter',
+            'slug'  => 'wasi-digital',
+            'plan'  => 'starter',
             'currency' => 'PEN',
         ]);
 
         $admin = User::factory()->create([
             'email' => 'admin@wasi.test',
-            'name' => 'Admin Wasi',
+            'name'  => 'Admin Wasi',
             'password' => Hash::make('password'),
             'company_id' => $company->id,
-            'role' => 'admin',
+            'role'  => 'admin',
             'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
+            'remember_token'   => Str::random(10),
         ]);
 
         User::factory()->count(2)->for($company)->state(['role' => 'staff'])->create();
@@ -42,12 +45,12 @@ class DemoSeeder extends Seeder
         Quote::factory()->count(20)
             ->for($company)
             ->for($admin)
-            ->state(['client_id' => null]) // 👈 mantener esto
+            ->state(['client_id' => null]) // mantener esto
             ->create()
             ->each(function (Quote $quote) use ($clients) {
                 $client = $clients->random();
                 $quote->client()->associate($client);
-                $quote->client_name = $client->name;
+                $quote->client_name  = $client->name;
                 $quote->client_email = $client->email;
                 $quote->client_phone = $client->phone;
                 $quote->save();
@@ -57,3 +60,4 @@ class DemoSeeder extends Seeder
             });
     }
 }
+
