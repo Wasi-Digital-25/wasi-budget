@@ -24,7 +24,9 @@ class ClientFactory extends Factory
             'tax_id' => $this->faker->unique()->numerify('###########'),
             'address' => $this->faker->address(),
             'notes' => $this->faker->sentence(),
-            'created_by' => User::factory(),
+            'created_by' => User::factory()->state(fn (array $attributes) => [
+                'company_id' => $attributes['company_id'] ?? Company::factory(),
+            ]),
         ];
     }
 }
