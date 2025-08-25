@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QuoteSentMail;
+use Illuminate\Support\Facades\DB;
 
 class QuoteController extends Controller
 {
@@ -36,7 +37,36 @@ class QuoteController extends Controller
         $data = $request->validated();
         $data['company_id'] = $request->user()->company_id;
         $data['user_id'] = $request->user()->id;
-        $quote = Quote::create($data);
+
+        $items = collect($data['items'] ?? [])
+            ->map(function ($item) {
+                $qty   = (int) ($item['qty']   ?? 1);
+                $price = (int) round(($item['price'] ?? 0) * 100);
+                $line  = $qty * $price;
+
+                return [
+                    'description'      => (string) ($item['description'] ?? ''),
+                    'quantity'         => $qty,
+                    'unit_price_cents' => $price,
+                    'total_cents'      => $line,
+                ];
+            });
+
+        $quoteTotal = (int) $items->sum('total_cents');
+        unset($data['items']);
+
+        $quote = null;
+
+        DB::transaction(function () use (&$quote, $data, $items, $quoteTotal) {
+            $quote = Quote::create($data);
+            $quote->total_cents = $quoteTotal;
+            $quote->save();
+
+            $quote->items()->createMany($items->all());
+
+            $quote->recalculateTotal();
+            $quote->save();
+        });
 
         return redirect()->route('quotes.show', $quote);
     }
@@ -56,7 +86,37 @@ class QuoteController extends Controller
     public function update(UpdateQuoteRequest $request, Quote $quote): RedirectResponse
     {
         $this->authorize('update', $quote);
-        $quote->update($request->validated());
+        $data = $request->validated();
+
+        $items = collect($data['items'] ?? [])
+            ->map(function ($item) {
+                $qty   = (int) ($item['qty']   ?? 1);
+                $price = (int) round(($item['price'] ?? 0) * 100);
+                $line  = $qty * $price;
+
+                return [
+                    'description'      => (string) ($item['description'] ?? ''),
+                    'quantity'         => $qty,
+                    'unit_price_cents' => $price,
+                    'total_cents'      => $line,
+                ];
+            });
+
+        $quoteTotal = (int) $items->sum('total_cents');
+        unset($data['items']);
+
+        DB::transaction(function () use ($quote, $data, $items, $quoteTotal) {
+            $quote->fill($data);
+            $quote->total_cents = $quoteTotal;
+            $quote->save();
+
+            $quote->items()->delete();
+            $quote->items()->createMany($items->all());
+
+            $quote->recalculateTotal();
+            $quote->save();
+        });
+
         return redirect()->route('quotes.show', $quote);
     }
 

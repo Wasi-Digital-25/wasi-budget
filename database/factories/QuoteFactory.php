@@ -56,7 +56,7 @@ class QuoteFactory extends Factory
     {
         return $this->afterCreating(function (Quote $quote) {
             QuoteItem::factory()->count(1)->create(['quote_id' => $quote->id]);
-            $quote->refresh();
+            $quote->recalculateTotal();
             $quote->save();
         });
     }

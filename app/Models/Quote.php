@@ -23,10 +23,11 @@ class Quote extends Model
     public function items(): HasMany { return $this->hasMany(QuoteItem::class, 'quote_id'); }
     public function client(): BelongsTo { return $this->belongsTo(Client::class); }
 
-    protected static function booted(): void
+    public function recalculateTotal(): void
     {
-        static::saving(function (Quote $quote) {
-            $quote->total_cents = $quote->items()->sum('line_total_cents');
+        $this->loadMissing('items');
+        $this->total_cents = (int) $this->items->sum(function ($i) {
+            return (int) $i->quantity * (int) $i->unit_price_cents;
         });
     }
 }
