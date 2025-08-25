@@ -15,8 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias([
-            'scope.company' => \App\Http\Middleware\ScopeCompany::class,
+        $middleware->group('auth', [
+            \Illuminate\Auth\Middleware\Authenticate::class,
+            \App\Http\Middleware\ScopeCompany::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
