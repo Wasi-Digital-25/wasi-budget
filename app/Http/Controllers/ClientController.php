@@ -31,12 +31,14 @@ class ClientController extends Controller
 
     public function store(StoreClientRequest $request): RedirectResponse
     {
+        $this->authorize('create', Client::class);
         $data = $request->validated();
         $data['company_id'] = $request->user()->company_id;
         $data['created_by'] = $request->user()->id;
         Client::create($data);
 
-        return redirect()->route('clients.index');
+        return redirect()->route('clients.index')
+            ->with('success', 'Client created successfully.');
     }
 
     public function edit(Client $client): View
@@ -47,17 +49,27 @@ class ClientController extends Controller
 
     public function update(UpdateClientRequest $request, Client $client): RedirectResponse
     {
+        $this->authorize('update', $client);
         $data = $request->validated();
+        $data['company_id'] = $request->user()->company_id;
         $client->update($data);
 
-        return redirect()->route('clients.index');
+        return redirect()->route('clients.index')
+            ->with('success', 'Client updated successfully.');
+    }
+
+    public function show(Client $client): View
+    {
+        $this->authorize('view', $client);
+        return view('clients.show', compact('client'));
     }
 
     public function destroy(Client $client): RedirectResponse
     {
         $this->authorize('delete', $client);
         $client->delete();
-        return redirect()->route('clients.index');
+        return redirect()->route('clients.index')
+            ->with('success', 'Client deleted successfully.');
     }
 }
 
