@@ -34,9 +34,26 @@ class QuoteController extends Controller
     public function store(StoreQuoteRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $items = $data['items'];
+        unset($data['items']);
         $data['company_id'] = $request->user()->company_id;
         $data['user_id'] = $request->user()->id;
         $quote = Quote::create($data);
+
+        foreach ($items as $item) {
+            $quote->items()->create([
+                'name' => $item['description'],
+                'description' => $item['description'],
+                'quantity' => $item['qty'],
+                'unit' => 'unit',
+                'unit_price_cents' => (int) round($item['price'] * 100),
+                'discount_cents' => 0,
+                'tax_cents' => 0,
+                'line_total_cents' => (int) round($item['qty'] * $item['price'] * 100),
+            ]);
+        }
+
+        $quote->save();
 
         return redirect()->route('quotes.show', $quote);
     }
@@ -56,7 +73,26 @@ class QuoteController extends Controller
     public function update(UpdateQuoteRequest $request, Quote $quote): RedirectResponse
     {
         $this->authorize('update', $quote);
-        $quote->update($request->validated());
+        $data = $request->validated();
+        $items = $data['items'];
+        unset($data['items']);
+
+        $quote->fill($data);
+        $quote->items()->delete();
+        foreach ($items as $item) {
+            $quote->items()->create([
+                'name' => $item['description'],
+                'description' => $item['description'],
+                'quantity' => $item['qty'],
+                'unit' => 'unit',
+                'unit_price_cents' => (int) round($item['price'] * 100),
+                'discount_cents' => 0,
+                'tax_cents' => 0,
+                'line_total_cents' => (int) round($item['qty'] * $item['price'] * 100),
+            ]);
+        }
+        $quote->save();
+
         return redirect()->route('quotes.show', $quote);
     }
 
