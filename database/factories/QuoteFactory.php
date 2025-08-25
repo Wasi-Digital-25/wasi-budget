@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Client;
 use App\Models\QuoteItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Quote>
@@ -40,7 +41,10 @@ class QuoteFactory extends Factory
                     ]);
             },
 
-            'number' => 'Q-' . $this->faker->unique()->numerify('000000'),
+            // 🔥 Fix: evitar OverflowException reemplazando unique()->numerify()
+            // Genera un código único con timestamp + random string
+            'number' => 'Q-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4)),
+
             'client_name' => $this->faker->name(),
             'client_email' => $this->faker->safeEmail(),
             'client_phone' => $this->faker->phoneNumber(),
@@ -59,4 +63,5 @@ class QuoteFactory extends Factory
         });
     }
 }
+
 
