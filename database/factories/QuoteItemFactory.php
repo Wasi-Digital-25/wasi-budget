@@ -15,20 +15,13 @@ class QuoteItemFactory extends Factory
 
     public function definition(): array
     {
-        $qty = $this->faker->randomFloat(2,1,5);
-        $unitPrice = $this->faker->numberBetween(1000,5000);
-        $lineTotal = (int) ($qty * $unitPrice);
+        $qty = $this->faker->numberBetween(1,5);
+        $unitCost = $this->faker->numberBetween(1000,5000);
         return [
             'quote_id' => Quote::factory(),
-            'sku' => $this->faker->ean8(),
-            'name' => $this->faker->word(),
             'description' => $this->faker->sentence(),
             'quantity' => $qty,
-            'unit' => 'units',
-            'unit_price_cents' => $unitPrice,
-            'discount_cents' => 0,
-            'tax_cents' => 0,
-            'line_total_cents' => $lineTotal,
+            'unit_cost_cents' => $unitCost,
         ];
     }
 }

@@ -12,9 +12,16 @@ class QuoteItem extends Model
 
     protected $table = 'budget_quote_items';
     protected $fillable = [
-        'quote_id','sku','name','description','quantity','unit',
-        'unit_price_cents','discount_cents','tax_cents','line_total_cents'
+        'quote_id',
+        'description',
+        'quantity',
+        'unit_cost_cents',
     ];
+
+    public function getSubtotalCentsAttribute(): int
+    {
+        return $this->quantity * $this->unit_cost_cents;
+    }
 
     public function quote(): BelongsTo { return $this->belongsTo(Quote::class, 'quote_id'); }
 }
