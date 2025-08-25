@@ -97,7 +97,13 @@ class QuoteController extends Controller
     public function pdf(Quote $quote)
     {
         $this->authorize('view', $quote);
-        // placeholder response
-        return response('PDF not implemented');
+
+        if (app()->bound('dompdf.wrapper')) {
+            $pdf = app('dompdf.wrapper')->loadView('quotes.pdf', ['quote' => $quote]);
+            return $pdf->download('quote-' . $quote->number . '.pdf');
+        }
+
+        $html = view('quotes.pdf', ['quote' => $quote])->render();
+        return response($html, 200, ['Content-Type' => 'application/pdf']);
     }
 }
