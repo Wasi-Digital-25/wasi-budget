@@ -15,6 +15,10 @@ class UpdateQuoteRequest extends FormRequest
     {
         return [
             'number' => ['required','string'],
+            'items' => ['required','array','min:1'],
+            'items.*.description' => ['required','string'],
+            'items.*.qty' => ['required','numeric','gt:0'],
+            'items.*.price' => ['required','numeric','gte:0'],
         ];
     }
 }
