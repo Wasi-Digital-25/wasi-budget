@@ -17,7 +17,13 @@ class QuoteSentMail extends Mailable
 
     public function build(): self
     {
-        return $this->subject('Quote '.$this->quote->number)
+        $email = $this->subject('Quote '.$this->quote->number)
             ->view('quotes.mail');
+
+        $content = app()->bound('dompdf.wrapper')
+            ? app('dompdf.wrapper')->loadView('quotes.pdf', ['quote' => $this->quote])->output()
+            : view('quotes.pdf', ['quote' => $this->quote])->render();
+
+        return $email->attachData($content, 'quote-'.$this->quote->number.'.pdf', ['mime' => 'application/pdf']);
     }
 }
