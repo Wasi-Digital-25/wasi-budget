@@ -20,7 +20,7 @@ class QuoteFactory extends Factory
     public function definition(): array
     {
         return [
-            // Si vienen en $attributes se usan; si no, se crean con factories.
+            // Reutiliza atributos si vienen; si no, crea con factories.
             'company_id' => fn (array $attributes) => $attributes['company_id'] ?? Company::factory(),
 
             'user_id' => function (array $attributes) {
@@ -41,16 +41,14 @@ class QuoteFactory extends Factory
                     ]);
             },
 
-            // 🔥 Fix: evitar OverflowException reemplazando unique()->numerify()
-            // Genera un código único con timestamp + random string
-            'number' => 'Q-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4)),
-
-            'client_name' => $this->faker->name(),
+            // Evita OverflowException de Faker con unique()->numerify()
+            'number'       => 'Q-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4)),
+            'client_name'  => $this->faker->name(),
             'client_email' => $this->faker->safeEmail(),
             'client_phone' => $this->faker->phoneNumber(),
-            'currency' => 'PEN',
-            'total_cents' => 0,
-            'status' => 'draft',
+            'currency'     => 'PEN',
+            'total_cents'  => 0,
+            'status'       => 'draft',
         ];
     }
 

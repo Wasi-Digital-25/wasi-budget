@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Quote;
 use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Requests\UpdateQuoteRequest;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,6 +14,7 @@ use App\Mail\QuoteSentMail;
 
 class QuoteController extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Quote::class);
