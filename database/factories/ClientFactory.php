@@ -25,6 +25,7 @@ class ClientFactory extends Factory
             'address' => $this->faker->address(),
             'notes' => $this->faker->sentence(),
             'created_by' => User::factory()->state(fn (array $attributes) => [
+                // Si la factory recibe company_id lo reutiliza; si no, crea una.
                 'company_id' => $attributes['company_id'] ?? Company::factory(),
             ]),
         ];
