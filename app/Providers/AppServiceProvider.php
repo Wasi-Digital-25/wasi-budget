@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Route::bind('client', function ($value) {
+            return \App\Models\Client::where('company_id', auth()->user()->company_id)
+                ->findOrFail($value);
+        });
     }
 }
