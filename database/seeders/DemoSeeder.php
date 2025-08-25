@@ -73,7 +73,7 @@ class DemoSeeder extends Seeder
                     ->for($quote)
                     ->create();
 
-                // Forzar recálculo/guardado si el modelo lo hace en eventos
+                $quote->recalculateTotal();
                 $quote->save();
             });
     }
