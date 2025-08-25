@@ -23,11 +23,9 @@ class Quote extends Model
     public function items(): HasMany { return $this->hasMany(QuoteItem::class, 'quote_id'); }
     public function client(): BelongsTo { return $this->belongsTo(Client::class); }
 
-    protected static function booted(): void
+    public function recalculateTotals(): void
     {
-        static::saving(function (Quote $quote) {
-            $quote->total_cents = $quote->items()->sum('line_total_cents');
-        });
+        app(\App\Services\QuoteService::class)->recalculateTotals($this);
     }
 }
 

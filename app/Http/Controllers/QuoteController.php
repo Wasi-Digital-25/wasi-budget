@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Quote;
-use App\Http\Requests\StoreQuoteRequest;
-use App\Http\Requests\UpdateQuoteRequest;
+use App\Http\Requests\QuoteStoreRequest;
+use App\Http\Requests\QuoteUpdateRequest;
+use App\Services\QuoteService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use App\Mail\QuoteSentMail;
 
 class QuoteController extends Controller
@@ -31,12 +33,20 @@ class QuoteController extends Controller
         return view('quotes.create');
     }
 
-    public function store(StoreQuoteRequest $request): RedirectResponse
+    public function store(QuoteStoreRequest $request, QuoteService $service): RedirectResponse
     {
         $data = $request->validated();
         $data['company_id'] = $request->user()->company_id;
         $data['user_id'] = $request->user()->id;
-        $quote = Quote::create($data);
+
+        $quote = null;
+        DB::transaction(function () use (&$quote, $data, $service) {
+            $items = $data['items'] ?? [];
+            unset($data['items']);
+            $quote = Quote::create($data);
+            $service->syncItems($quote, $items);
+            $service->recalculateTotals($quote);
+        });
 
         return redirect()->route('quotes.show', $quote);
     }
@@ -53,10 +63,19 @@ class QuoteController extends Controller
         return view('quotes.edit', compact('quote'));
     }
 
-    public function update(UpdateQuoteRequest $request, Quote $quote): RedirectResponse
+    public function update(QuoteUpdateRequest $request, Quote $quote, QuoteService $service): RedirectResponse
     {
         $this->authorize('update', $quote);
-        $quote->update($request->validated());
+        $data = $request->validated();
+
+        DB::transaction(function () use ($quote, $data, $service) {
+            $items = $data['items'] ?? [];
+            unset($data['items']);
+            $quote->update($data);
+            $service->syncItems($quote, $items);
+            $service->recalculateTotals($quote);
+        });
+
         return redirect()->route('quotes.show', $quote);
     }
 
@@ -94,10 +113,5 @@ class QuoteController extends Controller
         return redirect()->route('quotes.show', $quote);
     }
 
-    public function pdf(Quote $quote)
-    {
-        $this->authorize('view', $quote);
-        // placeholder response
-        return response('PDF not implemented');
-    }
+    // PDF handled by QuotePdfController
 }

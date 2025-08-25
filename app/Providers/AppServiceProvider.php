@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,8 +20,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Illuminate\Support\Facades\Route::bind('client', function ($value) {
-            return \App\Models\Client::where('company_id', auth()->user()->company_id)
+        Route::bind('client', function ($value) {
+            return \App\Models\Client::where('company_id', app('scope.company_id'))
+                ->findOrFail($value);
+        });
+        Route::bind('quote', function ($value) {
+            return \App\Models\Quote::where('company_id', app('scope.company_id'))
                 ->findOrFail($value);
         });
     }

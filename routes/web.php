@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\QuotePdfController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,7 +23,7 @@ Route::middleware(['auth','verified','scope.company'])->group(function () {
     Route::post('quotes/{quote}/send', [QuoteController::class,'send'])->name('quotes.send');
     Route::post('quotes/{quote}/accept', [QuoteController::class,'accept'])->name('quotes.accept');
     Route::post('quotes/{quote}/reject', [QuoteController::class,'reject'])->name('quotes.reject');
-    Route::get('quotes/{quote}/pdf', [QuoteController::class,'pdf'])->name('quotes.pdf');
+    Route::get('quotes/{quote}/pdf', [QuotePdfController::class,'download'])->name('quotes.pdf');
 });
 
 require __DIR__.'/auth.php';
